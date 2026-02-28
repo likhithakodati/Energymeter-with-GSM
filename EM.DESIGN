@@ -1,0 +1,53 @@
+`timescale 1ns/1ps
+
+module smart_energy_meter(
+    input clk,
+    input rst,
+    input meter_pulse,          // Pulse from energy metering IC
+    output reg [31:0] total_units,
+    output reg [31:0] bill_amount,
+    output reg tx               // GSM transmit line
+);
+
+parameter RATE = 5;             // ₹5 per unit
+
+reg [15:0] pulse_count;
+
+// Energy Calculation
+always @(posedge clk or posedge rst)
+begin
+    if(rst)
+    begin
+        pulse_count <= 0;
+        total_units <= 0;
+    end
+    else
+    begin
+        if(meter_pulse)
+        begin
+            pulse_count <= pulse_count + 1;
+            
+            // Assume 100 pulses = 1 unit
+            if(pulse_count == 100)
+            begin
+                total_units <= total_units + 1;
+                pulse_count <= 0;
+            end
+        end
+    end
+end
+
+// Billing Calculation
+always @(posedge clk)
+begin
+    bill_amount <= total_units * RATE;
+end
+
+// GSM Transmission Simulation (simple toggle send)
+always @(posedge clk)
+begin
+    if(total_units % 5 == 0 && total_units != 0)
+        tx <= ~tx;   // Simulated transmission trigger
+end
+
+endmodule
