@@ -1,0 +1,45 @@
+`timescale 1ns/1ps
+
+module smart_meter_tb;
+
+reg clk;
+reg rst;
+reg meter_pulse;
+wire [31:0] total_units;
+wire [31:0] bill_amount;
+wire tx;
+
+smart_energy_meter uut (
+    .clk(clk),
+    .rst(rst),
+    .meter_pulse(meter_pulse),
+    .total_units(total_units),
+    .bill_amount(bill_amount),
+    .tx(tx)
+);
+
+// Clock generation
+always #5 clk = ~clk;
+
+initial
+begin
+    $dumpfile("smart_meter.vcd");
+    $dumpvars(0, smart_meter_tb);
+
+    clk = 0;
+    rst = 1;
+    meter_pulse = 0;
+
+    #20 rst = 0;
+
+    // Generate pulses (simulate power usage)
+    repeat(500)
+    begin
+        #10 meter_pulse = 1;
+        #10 meter_pulse = 0;
+    end
+
+    #100 $finish;
+end
+
+endmodule
